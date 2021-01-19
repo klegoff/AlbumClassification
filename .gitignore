@@ -1,0 +1,6 @@
+*.csv
+*.npy
+*.pickle
+*.jpg
+*.npz
+*.wav
