@@ -4,3 +4,7 @@
 *.jpg
 *.npz
 *.wav
+
+maps_composers/
+misc/
+msdi/
