@@ -4,10 +4,11 @@
 *.jpg
 *.npz
 *.wav
-*.text
+*.txt
 *.json
 *checkpoint.ipynb
 
 maps_composers/
 misc/
 msdi/
+__pycache__

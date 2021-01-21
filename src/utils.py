@@ -31,36 +31,32 @@ def clean_sampling(array,n):
     # sample using skimage resize function
     shape = array[::n,::n,:].shape[0]
     return resize(array, output_shape = (shape,shape), anti_aliasing=True)
-    
+
+try:
+	from skimage.feature import hog #sometimes, this import gives an error, i didnt  find a solution, reset runtime if it happens
+	#might be linked to the "GPU" excecution environmnet
+	#### HOG feature computation
+	def compute_hog(array, n, m = 3, p = 1):
+		return copy.deepcopy(hog(array, orientations=n, pixels_per_cell=(m, m),cells_per_block=(p, p), visualize=True, multichannel=True)[1])
+except:
+	print("HOG import didnt work")
 
 #### Data formatting 
-def format_data(data, labels):
-    # dict to replace labels name by number
-    y_values = list(set(labels.values()))
-    
+def one_hot_encode(labels):
+    """
+    one hot encode the labels
+    """
+    # dict of correspondancies between labels and their indexes
+    y_values = list(set(labels))
+
     y_dict = {}
     for i in range(len(y_values)):
-      y_dict[y_values[i]] = i
-
-    x = []
-    y = []
-    i=0
+        y_dict[y_values[i]] = i
     
-    id_list = labels.keys() # list of our labels
-    for k in data.keys(): # shuffle to get another set of image
-      i+=1
-      try :
-        array = data.get(k)
-        if len(array.shape)==3 :
-          x.append(copy.deepcopy(array)) # param = size of the blocks on which we average
-          y.append(copy.deepcopy(labels.get(k)))
-      except :
-        print(k)
-    
-    y = to_categorical([y_dict[elem] for elem in y]) # one hot encoding
+    y = to_categorical([y_dict[elem] for elem in labels]) # one hot encoding
     classes = [np.argmax(elem) for elem in y]
     # cast to array
-    return np.array(x),np.array(y).reshape(len(y),15,1), classes, y_dict
+    return np.array(y).reshape(len(y),len(y_values),1), classes, y_dict
     
 #### Confusion matrix plot
 def plot_confusion(y_true,y_pred,y_dict,keep=[]):
@@ -85,21 +81,34 @@ def plot_confusion(y_true,y_pred,y_dict,keep=[]):
     ax.set(xlabel='Predicted genras', ylabel='Real genras')
 
 def compute_class_weight(classes, n=1):
-  """
-  input : 
-    classes = list of classes index for our data
-    n = power of the weights (n higher means we give much more importance to lower cardinality classes)
-  returns : class_weight (dict)
-  """
-  card_list = list(dict(Counter(classes)).values())
-  max_ = max(card_list)
-  card_list = [elem/max_ for elem in card_list] #compute cardinality ratio to the least popular class
-  weight = [(1/elem)**n for elem in card_list]# take the inverse as weights to the power n
-  class_weight = {}
-  for i in range(len(weight)):
-    class_weight[i] = weight[i]
-  return class_weight
+	"""
+	input : 
+	classes = list of classes index for our data
+	n = power of the weights (n higher means we give much more importance to lower cardinality classes)
+	returns : class_weight (dict)
+	"""
+	card_list = list(dict(Counter(classes)).values())
+	max_ = max(card_list)
+	card_list = [elem/max_ for elem in card_list] #compute cardinality ratio to the least popular class
+	weight = [(1/elem)**n for elem in card_list]# take the inverse as weights to the power n
+	class_weight = {}
+	for i in range(len(weight)):
+	class_weight[i] = weight[i]
+	return class_weight
   
+def preprocess_image_vectorized(row, sampling = "clean", n=16):
+	"""
+	to be applied to the msdi dataframe
+	"""
+	array = load_img(entry = row, msdi_path="")
+	if sampling == "clean":
+		return clean_sampling(array, n=16)
+	if sampling == "average":
+		return clean_sampling(array, n=16)
+	if sampling == "hog":
+		return compute_hog(array, n=16)
+	if sampling == "naive":
+		return naive_sampling(array, n=16)
   
 #############################################
 #
