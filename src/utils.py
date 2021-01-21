@@ -2,21 +2,23 @@
 """
 Useful functions for the image part
 """
+
 import copy
 from collections import Counter
 import numpy as np
+import pandas as pd
 import seaborn as sns
-
-from tensorflow.math import argmax, equal
-from tensorflow import cast
-from tensorflow.keras.backend import floatx
 
 from skimage.transform import downscale_local_mean, resize
 from keras.utils import to_categorical
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 
-import keras as K
 
+#############################################
+#
+#       Image part
+#
+#############################################
 
 #### Sampling function
 def naive_sampling(array, n):
@@ -99,3 +101,39 @@ def compute_class_weight(classes, n=1):
   return class_weight
   
   
+#############################################
+#
+#       textual part
+#
+#############################################
+
+def split_lyrics(path="data/msx_lyrics_genre.txt", save_path="data/msdi/lyrics/"):
+	"""
+	parse textual data and store the wordcount dataframe into json files
+	savint in data/msdi/lyrics
+	(initially : )
+	"""
+	#!mkdir $save_path
+
+	with open(path, "r") as file:
+		reader = file.readlines()
+		for i in range(len(reader)):
+
+			splitted = reader[i].replace("\n","").split(" ")
+			track_id = splitted[0]
+			style = splitted[1]
+
+			word_count = pd.DataFrame([elem.split(":") for elem in splitted[2:]])
+
+			vocab = {}
+
+			word_count = pd.DataFrame([elem.split(":") for elem in splitted[2:]]) # get the word count feature
+			word_count = pd.DataFrame(word_count.iloc[:,1].apply(int).values, index=word_count.iloc[:,0].apply(int).values) # transform into dataframe and cast into int
+			word_count.iloc[:,0].to_json(save_path + track_id + ".json") # save into json
+
+
+
+if __name__ == '__main__':
+
+	# preprocess lyrics data
+	split_lyrics()

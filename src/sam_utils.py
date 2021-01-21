@@ -211,7 +211,7 @@ def get_msdi_dataframe(msdi_path=_msdi_path):
 
 
 def load_mfcc(entry, msdi_path=_msdi_path):
-x = np.load(Path(msdi_path) / entry['mfcc'])
+	x = np.load(Path(msdi_path) / entry['mfcc'])
 	return x[entry['msd_track_id']]
 
 
@@ -263,10 +263,10 @@ if __name__ == '__main__':
 
 
 	# WAV IO example
-	fs, x = read_wav('../../data/sons_int/35.wav')
-	print(fs, x.shape, x[:5])
-	write_wav('tmp.wav', x, fs)
-	plt.plot(x)
-	plt.show()
+	# fs, x = read_wav('../../data/sons_int/35.wav')
+	# print(fs, x.shape, x[:5])
+	# write_wav('tmp.wav', x, fs)
+	# plt.plot(x)
+	# plt.show()
 
 

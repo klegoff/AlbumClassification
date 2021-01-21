@@ -4,6 +4,9 @@
 *.jpg
 *.npz
 *.wav
+*.text
+*.json
+*checkpoint.ipynb
 
 maps_composers/
 misc/
