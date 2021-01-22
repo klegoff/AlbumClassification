@@ -41,6 +41,7 @@ try:
 except:
 	print("HOG import didnt work")
 
+
 #### Data formatting 
 def one_hot_encode(labels):
     """
@@ -93,9 +94,11 @@ def compute_class_weight(classes, n=1):
 	weight = [(1/elem)**n for elem in card_list]# take the inverse as weights to the power n
 	class_weight = {}
 	for i in range(len(weight)):
-	class_weight[i] = weight[i]
+		class_weight[i] = weight[i]
 	return class_weight
   
+###### PREPROCESSING (apply filters to the raw images)
+
 def preprocess_image_vectorized(row, sampling = "clean", n=16):
 	"""
 	to be applied to the msdi dataframe
@@ -140,6 +143,18 @@ def split_lyrics(path="data/msx_lyrics_genre.txt", save_path="data/msdi/lyrics/"
 			word_count = pd.DataFrame(word_count.iloc[:,1].apply(int).values, index=word_count.iloc[:,0].apply(int).values) # transform into dataframe and cast into int
 			word_count.iloc[:,0].to_json(save_path + track_id + ".json") # save into json
 
+
+
+def load_lyrics(entry, msdi_path=""):
+	"""
+	get the lyrics data for the chosen entry
+	not all the song have lyrics, so need to have a try/except
+	"""
+	try :
+		pd.read_json(msdi_path + "lyrics/" + elem, typ="series")
+		return x[entry['msd_track_id']]
+	except:
+		return None
 
 
 if __name__ == '__main__':
