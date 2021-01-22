@@ -13,6 +13,7 @@ from skimage.transform import downscale_local_mean, resize
 from keras.utils import to_categorical
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 
+from sam_utils import load_img
 
 #############################################
 #
@@ -112,7 +113,8 @@ def preprocess_image_vectorized(row, sampling = "clean", n=16):
 		return compute_hog(array, n=16)
 	if sampling == "naive":
 		return naive_sampling(array, n=16)
-  
+	if sampling == "raw":
+		return array
 #############################################
 #
 #       textual part
