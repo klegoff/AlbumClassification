@@ -8,7 +8,9 @@ from keras.layers import Conv2D, MaxPool2D, Flatten, Dropout, Dense, Activation
 from keras import Sequential
 from keras.metrics import CategoricalCrossentropy, Accuracy
 
+from torch import sigmoid, argmax
 import torch.nn as nn
+import torch
 
 #############################################
 #
@@ -64,24 +66,36 @@ def image_model(input_shape):
 
 
 class lyrics_model(nn.Module):
-  def __init__(self,sequence_length,embed_size, hidden_size, genras):
-    super().__init__()
-    self.embed = nn.Embedding(sequence_length, embed_size)
-    self.seen_words_rnn = nn.GRU(embed_size,hidden_size,num_layers=1,bidirectional=False, batch_first=True)
-    self.words_frequency_rnn = nn.GRU(embed_size,hidden_size,num_layers=1,bidirectional=False, batch_first=True)
-    self.seen_words_dropout = nn.Dropout(0.3)
-    self.words_frequency_dropout = nn.Dropout(0.3)
-    self.linear = nn.Linear(hidden_size*2,out_features=genras) #*2 parce que j'ai deux couches 
-  
-  def forward(self,x_seen_words,x_words_frequency):
-    sw_embed = self.embed(x_seen_words)
-    wf_embed = self.embed(x_words_frequency)
-    output_sw,hidden_sw = self.seen_words_rnn(sw_embed)
-    output_wf,hidden_wf = self.words_frequency_rnn(wf_embed)
-    sw_drop = self.seen_words_dropout(hidden_sw)
-    wf_drop = self.words_frequency_dropout(hidden_wf)
-    cat = torch.cat((sw_drop,wf_drop),-1) #concatene et renvoie un tenseur 
-    return self.decision(cat.contiguous())
+    def __init__(self,sequence_length,embed_size, hidden_size, genras):
+        super().__init__()
+        self.embed = nn.Embedding(5001, embed_size) # first param = size of the vocabulary ("eos", and the 5000 other selected words)
+        self.seen_words_rnn = nn.GRU(embed_size,hidden_size,num_layers=1,bidirectional=False, batch_first=True)
+        self.words_frequency_rnn = nn.GRU(embed_size,hidden_size,num_layers=1,bidirectional=False, batch_first=True)
+        self.seen_words_dropout = nn.Dropout(0.3)
+        self.words_frequency_dropout = nn.Dropout(0.3)
+        self.linear = nn.Linear(hidden_size*2,out_features=genras) #*2 parce que j'ai deux couches 
+        self.decision = sigmoid
+        
+    def forward(self,x_seen_words,x_words_frequency):
+        sw_embed = self.embed(x_seen_words)
+        wf_embed = self.embed(x_words_frequency)
+        #print(wf_embed.shape)
+        output_sw,hidden_sw = self.seen_words_rnn(sw_embed)
+        output_wf,hidden_wf = self.words_frequency_rnn(wf_embed)
+        #print(output_sw.shape)
+        sw_drop = self.seen_words_dropout(hidden_sw)
+        wf_drop = self.words_frequency_dropout(hidden_wf)
+        #print(wf_drop.shape)
+        cat = torch.cat((sw_drop,wf_drop),-1) #concatene et renvoie un tenseur 
+        linear_out = self.linear(cat)
+        y_scores = self.decision(linear_out).squeeze()
+        return y_scores
+        #to get classes : 
+        #return argmax(y_scores, dim=2)
+
+
+
+### training/perf/predict functions
 
 
 #############################################

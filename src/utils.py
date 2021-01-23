@@ -188,9 +188,9 @@ def format_data_lyrics(data, max_len, msdi):
     labels = trackid_df.join(red_msdi).genre.values
 
     # compute Y
-    Y_onehot,Y, Y_dict = one_hot_encode(labels)
+    Y_onehot,classes, Y_dict = one_hot_encode(labels)
     
-    return X, Y, Y_dict
+    return X, Y_onehot,classes, Y_dict
 
 if __name__ == '__main__':
 
