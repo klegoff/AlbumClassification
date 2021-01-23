@@ -22,20 +22,18 @@ def image_model(input_shape):
     """
     model = Sequential()
     # convolutional layer
-    model.add(Conv2D(30, (5,5), input_shape=input_shape))
-    model.add(Activation("relu"))
-    model.add(Dropout(0.2))
-    #model.add(MaxPool2D(pool_size=(3,3)))
+    model.add(Conv2D(32, (3, 3), input_shape=input_shape))
+    model.add(Activation('relu'))
+    model.add(MaxPool2D(pool_size=(2, 2)))
 
-    model.add(Conv2D(20, (4,4), input_shape=input_shape))
-    model.add(Activation("relu"))
-    model.add(Dropout(0.2))
-    #model.add(MaxPool2D(pool_size=(3,3)))
+    model.add(Conv2D(32, (3, 3)))
+    model.add(Activation('relu'))
+    model.add(MaxPool2D(pool_size=(2, 2)))
 
-    model.add(Conv2D(15, (3,3), input_shape=input_shape))
-    model.add(Activation("relu"))
-    model.add(Dropout(0.6))
-    model.add(MaxPool2D(pool_size=(5,5)))
+    model.add(Conv2D(64, (3, 3)))
+    model.add(Activation('relu'))
+    model.add(MaxPool2D(pool_size=(2, 2)))
+
     model.add(Flatten())
 
     # output layer : 15 labels to predict
@@ -83,6 +81,55 @@ class lyrics_model(nn.Module):
     return self.decision(cat.contiguous())
 
 
+#############################################
+#
+#       Audio part
+#
+#############################################
+
+class mfcc_model(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.couche1 = nn.Sequential()
+        self.couche1.add_module("Conv1", nn.Conv2d(in_channels = (num_rows,num_columns,num_channels), out_channels = 32 , kernel_size=(4,3)))
+        self.couche1.add_module("ReLu1", nn.ReLU(inplace=True))
+        self.couche1.add_module("MaxPooling1", nn.MaxPool2d(kernel_size(4,2)))
+
+        self.couche2 = nn.Sequential()
+        self.couche2.add_module("Conv2", nn.Conv2d(in_channels = 32, out_channels = 64 , kernel_size=(4,3)))
+        self.couche2.add_module("ReLu2", nn.ReLU(inplace=True))
+        self.couche2.add_module("MaxPooling2", nn.MaxPool2d(kernel_size(4,2)))
+
+        self.couche3 = nn.Sequential()
+        self.couche3.add_module("Conv3", nn.Conv2d(in_channels = 64, out_channels = 64 , kernel_size=(4,1)))
+        self.couche3.add_module("ReLu3", nn.ReLU(inplace=True))
+        self.couche3.add_module("MaxPooling3", nn.MaxPool2d(kernel_size(4,1)))
+
+        self.couche4 = nn.Sequential()
+        self.couche4.add_module("Conv4", nn.Conv2d(in_channels = 64, out_channels = 32 , kernel_size=(1,1)))
+        self.couche4.add_module("ReLu4", nn.ReLU(inplace=True))
+        self.couche4.add_module("MaxPooling4", nn.MaxPool2d(kernel_size(4,1)))
+        self.couche4.add_module("Flatten", nn.Flatten())
+
+        self.linear = nn.Sequential()
+        self.linear.addd_module("Linear", nn.Linear(32*num_rows*num_columns*num_channels,num_labels))
+        self.linear.add_module("Sigmoid", nn.Sigmoid(inplace=True))
+
+    def forward(self,x):
+        x_1 = self.couche1(x)
+        x_2 = self.couche2(x_1)
+        x_3 = self.couche3(x_2)
+        x_4 = self.couche4(x_3)
+        x = x_4.view(-1,32*num_rows*num_columns*num_channels)
+        x = self.linear(x)
+        return x
+
+
+
+
+
+
+
 #### not functional : 
 def perf(model, loader):
     criterion = nn.CrossEntropyLoss()
@@ -128,4 +175,5 @@ def predict(model,loader):
        y_pred = y_scores > 0.5
        output.append(y_pred.int())
    return output
+
 
