@@ -18,7 +18,9 @@ import torch.nn as nn
 
 def image_model(input_shape):
     """
-    create an instance of CNN for the images
+    return an instance of CNN for the images
+    
+    /!\ still need to find a way to implement a weighted loss (because imbalanced data)    
     """
     model = Sequential()
     # convolutional layer
@@ -60,15 +62,16 @@ def image_model(input_shape):
 #
 #############################################
 
+
 class lyrics_model(nn.Module):
-  def __init__(self,embed_size, hidden_size):
+  def __init__(self,sequence_length,embed_size, hidden_size, genras):
     super().__init__()
-    self.embed = nn.Embedding(len(lyrics), embed_size)
+    self.embed = nn.Embedding(sequence_length, embed_size)
     self.seen_words_rnn = nn.GRU(embed_size,hidden_size,num_layers=1,bidirectional=False, batch_first=True)
     self.words_frequency_rnn = nn.GRU(embed_size,hidden_size,num_layers=1,bidirectional=False, batch_first=True)
     self.seen_words_dropout = nn.Dropout(0.3)
     self.words_frequency_dropout = nn.Dropout(0.3)
-    self.linear = nn.Linear(hidden_size*2,out_features=len(label_vocab)) #*2 parce que j'ai deux couches 
+    self.linear = nn.Linear(hidden_size*2,out_features=genras) #*2 parce que j'ai deux couches 
   
   def forward(self,x_seen_words,x_words_frequency):
     sw_embed = self.embed(x_seen_words)

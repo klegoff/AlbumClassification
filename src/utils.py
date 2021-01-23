@@ -157,7 +157,40 @@ def load_lyrics(entry, msdi_path=""):
 		return x[entry['msd_track_id']]
 	except:
 		return None
+    
+def format_X_lyrics(data, max_len):
+    """
+    return the data as sequences 
+    each row in a entry
+    the first max_len columns are the word indexes, and the last max_len columns are the word counts
+    for entries that have more than max_len words, we take only the first max_len words
+    """
+    X = np.zeros((len(data), max_len*2), dtype=int)
 
+    i=0
+    for elem in list(data.values()):
+        idx, val =list(elem.index), list(elem.values)
+        X[i][:min(len(idx), max_len)] = idx[:max_len]
+        X[i][max_len:min(max_len + len(val), 2*max_len)]  = val[:max_len]
+        i+=1
+    return X
+
+def format_data_lyrics(data, max_len, msdi):
+    """
+    preprocess X and Y for the lyrics data
+    """
+
+    X = format_X_lyrics(data, max_len)
+    
+    # some join operation to get the labels
+    trackid_df = pd.DataFrame(list(data.keys()), columns=["msd_track_id"]).applymap(str).set_index("msd_track_id")
+    red_msdi = msdi[['msd_track_id', 'genre']].applymap(str).set_index("msd_track_id")
+    labels = trackid_df.join(red_msdi).genre.values
+
+    # compute Y
+    Y_onehot,Y, Y_dict = one_hot_encode(labels)
+    
+    return X, Y, Y_dict
 
 if __name__ == '__main__':
 
